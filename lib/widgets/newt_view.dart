@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../domain/domain.dart';
 
-/// Displays a newt based on its evolution stage.
+/// Displays a newt based on its evolution stage with optional animations.
 /// Maps each stage to its corresponding visual representation.
 class NewtView extends StatelessWidget {
   final Newt newt;
@@ -70,5 +70,99 @@ class NewtView extends StatelessWidget {
       EvolutionStage.adult => '🦎',
       EvolutionStage.elder => '👑',
     };
+  }
+}
+
+/// Animated version of NewtView that plays entrance animations.
+class AnimatedNewtView extends StatefulWidget {
+  final Newt newt;
+  final double size;
+  final bool playSpawnAnimation;
+  final bool playMergeAnimation;
+
+  const AnimatedNewtView({
+    super.key,
+    required this.newt,
+    required this.size,
+    this.playSpawnAnimation = false,
+    this.playMergeAnimation = false,
+  });
+
+  @override
+  State<AnimatedNewtView> createState() => _AnimatedNewtViewState();
+}
+
+class _AnimatedNewtViewState extends State<AnimatedNewtView>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(
+        milliseconds: widget.playMergeAnimation ? 400 : 300,
+      ),
+    );
+
+    if (widget.playSpawnAnimation) {
+      // Spawn: fade in and scale up
+      _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
+      );
+      _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+      );
+      _controller.forward();
+    } else if (widget.playMergeAnimation) {
+      // Merge: pop/bounce effect
+      _scaleAnimation = TweenSequence<double>([
+        TweenSequenceItem(
+          tween: Tween<double>(begin: 1.0, end: 1.3),
+          weight: 30,
+        ),
+        TweenSequenceItem(
+          tween: Tween<double>(begin: 1.3, end: 0.9),
+          weight: 30,
+        ),
+        TweenSequenceItem(
+          tween: Tween<double>(begin: 0.9, end: 1.0),
+          weight: 40,
+        ),
+      ]).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      );
+      _opacityAnimation = const AlwaysStoppedAnimation(1.0);
+      _controller.forward();
+    } else {
+      // No animation
+      _scaleAnimation = const AlwaysStoppedAnimation(1.0);
+      _opacityAnimation = const AlwaysStoppedAnimation(1.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: Opacity(
+            opacity: _opacityAnimation.value,
+            child: NewtView(newt: widget.newt, size: widget.size),
+          ),
+        );
+      },
+    );
   }
 }

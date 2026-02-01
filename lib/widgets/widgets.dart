@@ -1,6 +1,7 @@
 // Widgets barrel file
 export 'ad_banner_slot.dart';
 export 'creek_grid.dart';
+export 'discovery_celebration.dart';
 export 'game_over_dialog.dart';
 export 'grid_cell.dart';
 export 'incubator_button.dart';
