@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../domain/domain.dart';
 import 'animation_providers.dart';
+import 'persistence_providers.dart';
 
 /// Notifier for the game board state.
 /// Manages the list of newts on the grid and handles game actions.
@@ -12,7 +13,13 @@ class BoardNotifier extends StateNotifier<BoardState> {
   final _uuid = const Uuid();
   final _random = Random();
 
-  BoardNotifier(this.ref) : super(BoardState.initial());
+  BoardNotifier(this.ref, {BoardState? initialState})
+      : super(initialState ?? BoardState.initial());
+
+  /// Saves the current state to persistence.
+  void _saveState() {
+    ref.read(persistenceServiceProvider).saveBoardState(state);
+  }
 
   /// Spawns a new egg into a random empty slot.
   /// Returns true if spawn was successful, false if board is full.
@@ -40,6 +47,7 @@ class BoardNotifier extends StateNotifier<BoardState> {
     newBoard[targetIndex] = newNewt;
 
     state = state.copyWith(board: newBoard);
+    _saveState();
     
     // Trigger spawn animation
     ref.read(animationEventProvider.notifier).triggerSpawn(targetIndex);
@@ -91,6 +99,7 @@ class BoardNotifier extends StateNotifier<BoardState> {
       newBoard[targetIndex] = source;
       newBoard[sourceIndex] = null;
       state = state.copyWith(board: newBoard);
+      _saveState();
       return true;
     }
 
@@ -125,6 +134,7 @@ class BoardNotifier extends StateNotifier<BoardState> {
     newBoard[sourceIndex] = null;
 
     state = state.copyWith(board: newBoard);
+    _saveState();
 
     // Trigger merge animation
     ref.read(animationEventProvider.notifier).triggerMerge(targetIndex, nextStage);
@@ -155,14 +165,19 @@ class BoardNotifier extends StateNotifier<BoardState> {
       board: newBoard,
       gameState: GameState.playing,
     );
+    _saveState();
 
     return true;
   }
 
   /// Resets the board for a new game.
   void resetGame() {
+    // Clear saved state
+    ref.read(persistenceServiceProvider).clearAll();
+    
     ref.read(playerStatsProvider.notifier).reset();
     state = BoardState.initial();
+    _saveState();
   }
 
   /// Expands the board when player levels up.
@@ -175,6 +190,7 @@ class BoardNotifier extends StateNotifier<BoardState> {
     }
     
     state = state.copyWith(board: newBoard);
+    _saveState();
   }
 
   /// Checks if the game is over (board full, no valid merges).
@@ -197,6 +213,7 @@ class BoardNotifier extends StateNotifier<BoardState> {
 
     // No valid merges found = game over
     state = state.copyWith(gameState: GameState.gameOver);
+    _saveState();
   }
 
 }
@@ -233,15 +250,26 @@ class BoardState {
 }
 
 /// Provider for the board state.
+/// Loads from persistence on init.
 final boardProvider = StateNotifierProvider<BoardNotifier, BoardState>((ref) {
-  return BoardNotifier(ref);
+  // Try to load saved state
+  final persistence = ref.watch(persistenceServiceProvider);
+  final savedState = persistence.loadBoardState();
+  
+  return BoardNotifier(ref, initialState: savedState);
 });
 
 /// Notifier for player statistics and progression.
 class PlayerStatsNotifier extends StateNotifier<PlayerStats> {
   final Ref ref;
 
-  PlayerStatsNotifier(this.ref) : super(const PlayerStats());
+  PlayerStatsNotifier(this.ref, {PlayerStats? initialState})
+      : super(initialState ?? const PlayerStats());
+
+  /// Saves the current stats to persistence.
+  void _saveStats() {
+    ref.read(persistenceServiceProvider).savePlayerStats(state);
+  }
 
   /// Called when a merge occurs to award points and update progression.
   void onMerge(EvolutionStage newStage) {
@@ -279,6 +307,8 @@ class PlayerStatsNotifier extends StateNotifier<PlayerStats> {
     if (isNewDiscovery) {
       ref.read(animationEventProvider.notifier).triggerNewDiscovery(newStage);
     }
+    
+    _saveStats();
   }
 
   /// Records a second chance use.
@@ -286,15 +316,22 @@ class PlayerStatsNotifier extends StateNotifier<PlayerStats> {
     state = state.copyWith(
       secondChancesUsed: state.secondChancesUsed + 1,
     );
+    _saveStats();
   }
 
   /// Resets stats for a new game.
   void reset() {
     state = const PlayerStats();
+    _saveStats();
   }
 }
 
 /// Provider for player stats.
+/// Loads from persistence on init.
 final playerStatsProvider = StateNotifierProvider<PlayerStatsNotifier, PlayerStats>((ref) {
-  return PlayerStatsNotifier(ref);
+  // Try to load saved stats
+  final persistence = ref.watch(persistenceServiceProvider);
+  final savedStats = persistence.loadPlayerStats();
+  
+  return PlayerStatsNotifier(ref, initialState: savedStats);
 });

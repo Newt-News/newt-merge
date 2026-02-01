@@ -102,10 +102,10 @@ A 2D portrait-mode merge game built in Flutter.
 - **UI Trigger:** "Incubator" button calls `spawnNewt()`. Disabled when board is full.
 
 ## Phase 5: Persistence
-- **Isar Setup:** Initialize Isar in `main()` with `path_provider` for directory.
-- **Auto-Save:** Use a Riverpod `ref.listen` to write game state to Isar on every change.
-- **Hydration:** On app start, `BoardNotifier` checks Isar and populates initial state from the database.
-- **Reset:** Provide a "New Game" option that clears Isar and resets state.
+- **shared_preferences Setup:** Already added as dependency.
+- **Auto-Save:** Use a Riverpod `ref.listen` to write game state to shared_preferences as JSON on every change.
+- **Hydration:** On app start, check shared_preferences and populate initial state from saved JSON.
+- **Reset:** "New Game" clears saved state and resets.
 
 ## Phase 6: Assets & Visual Polish
 - **Newt Assets:** Create/generate assets for each evolution stage:
