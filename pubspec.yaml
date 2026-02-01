@@ -1,0 +1,41 @@
+name: newt_merge
+description: "A 2D merge game featuring roughskinned newts in an Oregon creek setting."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+  
+  # Local Persistence (lightweight alternative to Isar due to analyzer conflicts)
+  shared_preferences: ^2.3.4
+  
+  # Ads (for later)
+  google_mobile_ads: ^5.3.0
+  
+  # Utils
+  uuid: ^4.5.1
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  
+  # Code generation
+  riverpod_generator: ^2.6.3
+  build_runner: ^2.4.14
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/newts/
+    - assets/images/backgrounds/
