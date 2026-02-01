@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/game_providers.dart';
+
 /// Displays the current Creek Level and Points at the top of the screen.
 class Scoreboard extends ConsumerWidget {
   const Scoreboard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Connect to PlayerStatsNotifier in Phase 4
-    const creekLevel = 1;
-    const points = 0;
+    final stats = ref.watch(playerStatsProvider);
 
     final theme = Theme.of(context);
 
@@ -34,7 +34,7 @@ class Scoreboard extends ConsumerWidget {
                 ),
               ),
               Text(
-                '$creekLevel',
+                '${stats.creekLevel}',
                 style: theme.textTheme.headlineMedium?.copyWith(
                   color: theme.colorScheme.onPrimaryContainer,
                   fontWeight: FontWeight.bold,
@@ -60,7 +60,7 @@ class Scoreboard extends ConsumerWidget {
                 ),
               ),
               Text(
-                '$points',
+                '${stats.points}',
                 style: theme.textTheme.headlineMedium?.copyWith(
                   color: theme.colorScheme.onPrimaryContainer,
                   fontWeight: FontWeight.bold,

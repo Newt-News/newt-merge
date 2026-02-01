@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/game_providers.dart';
+
 /// Button to spawn new eggs into the creek.
 class IncubatorButton extends ConsumerWidget {
   const IncubatorButton({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Connect to BoardNotifier in Phase 3
-    // Check if board is full to disable button
-    const isBoardFull = false;
+    final boardState = ref.watch(boardProvider);
+    final isBoardFull = boardState.isBoardFull;
 
     final theme = Theme.of(context);
 
@@ -20,8 +21,7 @@ class IncubatorButton extends ConsumerWidget {
         onPressed: isBoardFull
             ? null
             : () {
-                // TODO: Call spawnNewt() in Phase 4
-                debugPrint('Spawn egg!');
+                ref.read(boardProvider.notifier).spawnNewt();
               },
         style: ElevatedButton.styleFrom(
           backgroundColor: theme.colorScheme.primary,
