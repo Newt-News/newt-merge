@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../domain/domain.dart';
+import 'animation_providers.dart';
 
 /// Notifier for the game board state.
 /// Manages the list of newts on the grid and handles game actions.
@@ -39,6 +40,9 @@ class BoardNotifier extends StateNotifier<BoardState> {
     newBoard[targetIndex] = newNewt;
 
     state = state.copyWith(board: newBoard);
+    
+    // Trigger spawn animation
+    ref.read(animationEventProvider.notifier).triggerSpawn(targetIndex);
     
     // Check for game over after spawn
     _checkGameOver();
@@ -122,7 +126,10 @@ class BoardNotifier extends StateNotifier<BoardState> {
 
     state = state.copyWith(board: newBoard);
 
-    // Award points and update stats
+    // Trigger merge animation
+    ref.read(animationEventProvider.notifier).triggerMerge(targetIndex, nextStage);
+
+    // Award points and update stats (may trigger discovery)
     ref.read(playerStatsProvider.notifier).onMerge(nextStage);
 
     return true;
@@ -242,8 +249,10 @@ class PlayerStatsNotifier extends StateNotifier<PlayerStats> {
     
     // Update highest stage if needed
     var highest = state.highestStageDiscovered;
+    var isNewDiscovery = false;
     if (newStage.index > highest.index) {
       highest = newStage;
+      isNewDiscovery = true;
     }
 
     var newState = state.copyWith(
@@ -257,11 +266,19 @@ class PlayerStatsNotifier extends StateNotifier<PlayerStats> {
         creekLevel: newState.creekLevel + 1,
       );
       
+      // Trigger level-up animation
+      ref.read(animationEventProvider.notifier).triggerLevelUp();
+      
       // Expand the board
       ref.read(boardProvider.notifier).expandBoard(newState.unlockedSlots);
     }
 
     state = newState;
+
+    // Trigger discovery celebration after state is updated
+    if (isNewDiscovery) {
+      ref.read(animationEventProvider.notifier).triggerNewDiscovery(newStage);
+    }
   }
 
   /// Records a second chance use.
