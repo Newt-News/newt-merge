@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/domain.dart';
+import '../providers/game_providers.dart';
 import 'grid_cell.dart';
 
 /// The main game grid representing the creek.
@@ -11,11 +12,12 @@ class CreekGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Connect to BoardNotifier in Phase 3
-    // For now, using placeholder values
-    const unlockedSlots = 4;
-    const gridTier = 4; // 2x2
-    const gridDimension = 2;
+    final boardState = ref.watch(boardProvider);
+    final stats = ref.watch(playerStatsProvider);
+    
+    final unlockedSlots = stats.unlockedSlots;
+    final gridTier = stats.currentGridTier;
+    final gridDimension = stats.gridDimension;
 
     // Create grid slots
     final slots = List.generate(gridTier, (index) {
@@ -24,9 +26,6 @@ class CreekGrid extends ConsumerWidget {
         isUnlocked: index < unlockedSlots,
       );
     });
-
-    // Placeholder board state (all null for now)
-    final board = List<Newt?>.filled(unlockedSlots, null);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -50,8 +49,8 @@ class CreekGrid extends ConsumerWidget {
               itemCount: gridTier,
               itemBuilder: (context, index) {
                 final slot = slots[index];
-                final newt = slot.isUnlocked && index < board.length
-                    ? board[index]
+                final newt = slot.isUnlocked && index < boardState.board.length
+                    ? boardState.board[index]
                     : null;
 
                 return GridCell(
